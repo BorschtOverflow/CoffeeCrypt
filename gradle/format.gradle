@@ -1,0 +1,289 @@
+spotless
+{
+    lineEndings = 'PRESERVE'
+
+    final String group = project.group.toString()
+
+    java
+    {
+        forbidModuleImports()
+        expandWildcardImports()
+        shortenFullyQualifiedTypes()
+
+        // Base64 encodes a markdown Javadoc comment so it doesn't get messed up by a formatter.
+        custom 'hideMarkdownJavadoc', { String content ->
+                content.replaceAll(/(?m)(?:^[ \t]*\/\/\/.*(?:\r?\n)?)+/) { String match ->
+                final String encoded = match.bytes.encodeBase64().toString()
+                return "// MD_JAVADOC_START:${encoded}:MD_JAVADOC_END\n"
+            }
+        }
+
+        eclipse().configFile(rootProject.file('eclipse-format.xml'))
+
+        replaceRegex 'Ensure blank line after package', '^(package\\s+[^;]+;)\\n(?=import)', '$1\n\n'
+        replaceRegex 'Blank line before else', '^([ \t]*)\\}(\r?\n)\\1else\\b', '$1}$2$2$1else'
+        replaceRegex 'Blank line after block closing brace', '^([ \t]*)\\}(\r?\n)(?!([ \t]*\\}|[ \t]*else\\b|[ \t]*catch\\b|[ \t]*finally\\b|\\s*$))', '$1}$2$2'
+        replaceRegex 'Remove empty line after opening brace', '(\\{\r?\n)[ \t]*\r?\n', '$1'
+        replaceRegex 'Remove empty line before closing brace', '\r?\n[ \t]*\r?\n([ \t]*\\})', '\n$1'
+        replaceRegex 'Collapse empty annotations', '(@interface\\s+[A-Za-z0-9_]+(?:<[^>]+>)?)\\s*\\{\\r?\\n\\s*\\}', '$1 {}'
+        replaceRegex 'Collapse empty records', '(record\\s+[A-Za-z0-9_]+(?:<[^>]+>)?\\s*\\([^)]*\\))\\s*\\{\\r?\\n\\s*\\}', '$1 {}'
+
+        custom 'sortImports', { String content ->
+            final List<String> lines = content.lines().toList()
+            final List<String> imports = lines.findAll { String line -> line.trim().startsWith('import ') }
+
+            if (imports.isEmpty())
+                return content
+
+            final List<String> staticImports = []
+            final List<String> normalImports = []
+            final List<String> groupImports  = []
+
+            final Closure<Map<String, String>> parseImport = { String line ->
+                final String cleanLine = line.trim().replaceAll('^import\\s+(static\\s+)?', '').replaceAll(';$', '')
+                final int    lastDot   = cleanLine.lastIndexOf('.')
+
+                if (lastDot == -1)
+                {
+                    return [pkg: cleanLine, cls: '']
+                }
+
+                return [pkg: cleanLine[0..<lastDot], cls: cleanLine[(lastDot + 1)..-1]]
+            }
+
+            imports.each { String line ->
+                if (line.trim().startsWith('import static '))
+                {
+                    staticImports << line
+                }
+
+                else if (group && line.contains("import ${group}."))
+                {
+                    groupImports << line
+                }
+
+                else
+                {
+                    normalImports << line
+                }
+            }
+
+            staticImports.sort { String a, String b ->
+                final Map<String, String> pA = parseImport(a), pB = parseImport(b)
+                pA.pkg <=> pB.pkg ?:
+                pA.pkg.length() <=> pB.pkg.length() ?:
+                pA.cls.length() <=> pB.cls.length()
+            }
+
+            normalImports.sort { String a, String b ->
+                final Map<String, String> pA = parseImport(a), pB = parseImport(b)
+                pA.pkg <=> pB.pkg ?:
+                pA.pkg.length() <=> pB.pkg.length() ?:
+                pA.cls.length() <=> pB.cls.length()
+            }
+
+            groupImports.sort { String a, String b ->
+                final Map<String, String> pA = parseImport(a), pB = parseImport(b)
+                pB.pkg <=> pA.pkg ?:
+                pB.pkg.length() <=> pA.pkg.length() ?:
+                pB.cls.length() <=> pA.cls.length()
+            }
+
+            final List<String> sortedGroups = []
+
+            if (!staticImports.isEmpty()) sortedGroups << staticImports.join('\n')
+            if (!normalImports.isEmpty()) sortedGroups << normalImports.join('\n')
+            if (!groupImports.isEmpty())  sortedGroups << groupImports.join('\n')
+
+            final String newImportBlock = sortedGroups.join('\n\n')
+
+            final int firstImportIdx = lines.findIndexOf { String line -> line.trim().startsWith('import ') }
+            final int lastImportIdx  = lines.findLastIndexOf { String line -> line.trim().startsWith('import ') }
+
+            final List<String> before = lines[0..<firstImportIdx]
+            final List<String> after  = (lastImportIdx + 1 < lines.size()) ? lines[(lastImportIdx + 1)..-1] : []
+
+            return (before + [newImportBlock] + after).join('\n')
+        }
+
+        custom 'sortAnnotationsByLength', { String content ->
+            final String annotationBlockPattern = /(?m)^((?:[ \t]*@(?!interface\b)[^\n]+\r?\n){2,})/
+
+            return content.replaceAll(annotationBlockPattern) { String fullMatch, String block ->
+                final String[] lines = block.split(/\r?\n/)
+                final List<String> sortedLines = lines.sort(false) { String a, String b ->
+                    final int diff = a.trim().length() <=> b.trim().length()
+                    return diff != 0 ? diff : a.trim() <=> b.trim()
+                }
+
+                return sortedLines.join('\n') + '\n'
+            }
+        }
+
+        custom 'alignAndSortVariables', { String content ->
+            final List<String> lines = content.split(/\r?\n/, -1) as List<String>
+            final List<String> currentBlock = []
+            final List<String> result = []
+
+            final Closure<Map<String, String>> parseLine = { String line ->
+                final int    eqIdx = line.indexOf('=')
+                final String left  = line.substring(0, eqIdx).trim()
+                final String right = line.substring(eqIdx + 1).stripLeading()
+
+                final int    firstSpace = left.indexOf(' ')
+                final int    indentLen  = line.indexOf(line.trim())
+                final String indent     = line.substring(0, indentLen)
+
+                if (firstSpace > 0)
+                {
+                    final String type    = left.substring(0, firstSpace).trim()
+                    final String varName = left.substring(firstSpace + 1).trim()
+                    return [indent: indent, type: type, varName: varName, right: right, original: line]
+                }
+
+                return null
+            }
+
+            final Closure<Void> flushBlock = { List<String> block ->
+                if (block.isEmpty())
+                    return
+
+                if (block.size() == 1)
+                {
+                    final String line = block[0]
+
+                    final Map<String, String> parsed = parseLine(line)
+
+                    if (parsed)
+                    {
+                        result.add("${parsed.indent}${parsed.type} ${parsed.varName} = ${parsed.right}")
+                    }
+
+                    else
+                    {
+                        result.add(line)
+                    }
+
+                    return
+                }
+
+                List<Map<String, String>> parsedLines = block.collect { String line -> parseLine(line) }
+
+                if (parsedLines.any { Map<String, String> parsedLine -> parsedLine == null })
+                {
+                    result.addAll(block)
+                    return
+                }
+
+                parsedLines = parsedLines.sort { Map<String, String> a, Map<String, String> b ->
+                    final int lenA = "${a.type} ${a.varName} = ${a.right}".length()
+                    final int lenB = "${b.type} ${b.varName} = ${b.right}".length()
+                    return lenB <=> lenA
+                }
+
+                final int maxTypeLen = parsedLines.collect { Map<String, String> parsedLine -> parsedLine.type.length() }.max()
+
+                final int maxLeftLen = parsedLines.collect
+                { Map<String, String> parsedLine ->
+                    final String paddedType = String.format("%-${maxTypeLen}s", parsedLine.type)
+                    return "${paddedType} ${parsedLine.varName}".length()
+                }.max()
+
+                parsedLines.each { Map<String, String> p ->
+                    final String paddedType = String.format("%-${maxTypeLen}s", p.type)
+                    final String leftCombined = String.format("%-${maxLeftLen}s", "${paddedType} ${p.varName}")
+                    result.add("${p.indent}${leftCombined} = ${p.right}")
+                }
+            }
+
+            for (String line : lines)
+            {
+                final int eqIdx = line.indexOf('=')
+                final boolean isAssignment = eqIdx > 0 &&
+                        line.trim().endsWith(';') &&
+                        ("=!+-*/%&|^<>".indexOf((int) line.charAt(eqIdx - 1)) == -1) &&
+                        (eqIdx + 1 < line.length() && line.charAt(eqIdx + 1) != (char)'=')
+
+                if (isAssignment)
+                {
+                    currentBlock.add(line)
+                }
+
+                else
+                {
+                    flushBlock(currentBlock)
+                    currentBlock.clear()
+                    result.add(line)
+                }
+            }
+
+            flushBlock(currentBlock)
+
+            return result.join('\n')
+        }
+
+        custom 'revealMarkdownJavadoc', { String content ->
+                content.replaceAll(/(?m)^[ \t]*\/\/ MD_JAVADOC_START:(.*?):MD_JAVADOC_END\r?\n?/) { String match, String encoded ->
+                return new String(encoded.decodeBase64(), 'UTF-8')
+            }
+        }
+
+        custom 'removeBlankLinesAfterMarkdownJavadoc', { String content ->
+            final String pattern = /(?m)(^[ \t]*\/\/\/[^\n]*\r?\n)(?:[ \t]*\r?\n)+(?=[ \t]*(?:[^\/\s]|\/(?!\/\/)))/
+            return content.replaceAll(pattern, '$1')
+        }
+
+        endWithNewline()
+        trimTrailingWhitespace()
+        // removeUnusedImports() Disabled because it treats imports for Javadoc code links as unused.
+    }
+
+    final int indentSizeForYaml = 2
+    final int indentSize = 4
+
+    groovyGradle
+    {
+        target('**/*.gradle')
+        targetExclude('**/docs/**')
+        leadingTabsToSpaces(indentSize)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+
+    format('xml')
+    {
+        target('**/*.xml')
+        targetExclude('**/build/**')
+        leadingTabsToSpaces(indentSize)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+
+    format('yaml')
+    {
+        target('**/*.yml', '**/*.yaml')
+        targetExclude('**/docs/**')
+        trimTrailingWhitespace()
+        leadingTabsToSpaces(indentSizeForYaml)
+        endWithNewline()
+    }
+
+    format('misc')
+    {
+        target('**/*.md',
+               '**/.gitignore',
+               '**/.gitattributes',
+               'gradle.properties'
+        )
+
+        targetExclude('**/docs/**')
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+checkstyle
+{
+    toolVersion = '14.0.0'
+    configFile  = file('checkstyle.xml')
+}

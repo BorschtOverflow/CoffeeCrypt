@@ -1,0 +1,21 @@
+# IntelliJ
+.idea/
+
+# Gradle Cache
+.gradle/
+
+# Build output
+build/
+
+# Eclipse || JDTLS data
+bin/
+tmp/
+.settings/
+.factorypath
+.classpath
+.loadpath
+.metadata
+.project
+
+# Javadoc
+docs/

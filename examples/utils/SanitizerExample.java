@@ -14,12 +14,20 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-package io.github.borschtoverflow.coffeecrypt;
+package utils;
 
-public final class Main
+import java.util.Arrays;
+
+import io.github.borschtoverflow.coffeecrypt.utils.Sanitizer;
+
+public final class SanitizerExample
 {
     public static void main(String[] args)
     {
-        System.out.println("Hello, World!");
+        char[] sensitiveData = {'p', '@', '3', '3', 'w', '0', 'r', 'd', '!'};
+
+        Sanitizer.sanitizeArray(sensitiveData);
+
+        System.out.println(Arrays.toString(sensitiveData));
     }
 }

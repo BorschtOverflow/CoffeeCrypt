@@ -16,5 +16,5 @@
 
 /// Simple Java crypto library
 ///
-/// @version 0.0.0
+/// @version 0.1.0
 package io.github.borschtoverflow.coffeecrypt;

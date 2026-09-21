@@ -32,6 +32,7 @@ javadoc
     options
     {
         addStringOption('Xdoclint:-missing', '-quiet')
+        memberLevel = JavadocMemberLevel.PUBLIC
         header = "v${project.version}"
         bottom = "${footer}"
     }

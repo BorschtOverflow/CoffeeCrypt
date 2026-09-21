@@ -6,6 +6,7 @@ spotless
 
     java
     {
+        toggleOffOn()
         forbidModuleImports()
         expandWildcardImports()
         shortenFullyQualifiedTypes()
@@ -120,7 +121,7 @@ spotless
             }
         }
 
-        custom 'alignAndSortVariables', { String content ->
+        custom 'alignVariables', { String content ->
             final List<String> lines = content.split(/\r?\n/, -1) as List<String>
             final List<String> currentBlock = []
             final List<String> result = []
@@ -175,15 +176,10 @@ spotless
                     return
                 }
 
-                parsedLines = parsedLines.sort { Map<String, String> a, Map<String, String> b ->
-                    final int lenA = "${a.type} ${a.varName} = ${a.right}".length()
-                    final int lenB = "${b.type} ${b.varName} = ${b.right}".length()
-                    return lenB <=> lenA
-                }
-
                 final int maxTypeLen = parsedLines.collect { Map<String, String> parsedLine -> parsedLine.type.length() }.max()
 
                 final int maxLeftLen = parsedLines.collect
+
                 { Map<String, String> parsedLine ->
                     final String paddedType = String.format("%-${maxTypeLen}s", parsedLine.type)
                     return "${paddedType} ${parsedLine.varName}".length()

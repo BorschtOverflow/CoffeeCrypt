@@ -14,7 +14,31 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-/// Simple Java crypto library
-///
-/// @version 0.2.0
-package io.github.borschtoverflow.coffeecrypt;
+package io.github.borschtoverflow.coffeecrypt.hashing;
+
+public final class SHA2_512t256Test extends AbstractHashFunctionTest
+{
+    @Override
+    protected HashFunction getHashFunction()
+    {
+        return new SHA2_512t256();
+    }
+
+    @Override
+    protected String getHelloWorldHash()
+    {
+        return "0686f0a605973dc1bf035d1e2b9bad1985a0bff712ddd88abd8d2593e5f99030";
+    }
+
+    @Override
+    protected String getLargeStringHash()
+    {
+        return "cbfc11533b66f948ae8645fdeec7dff079aa14168355dbb603bd6b2a770a9dcc";
+    }
+
+    @Override
+    protected String getFileHash()
+    {
+        return "297d0d9d47eb8af62af573dfc8384bd793352a444fd864c975d133963f39700c";
+    }
+}

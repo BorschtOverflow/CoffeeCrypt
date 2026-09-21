@@ -14,7 +14,5 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-/// Simple Java crypto library
-///
-/// @version 0.2.0
-package io.github.borschtoverflow.coffeecrypt;
+/// Contains hash functions
+package io.github.borschtoverflow.coffeecrypt.hashing;

@@ -14,7 +14,18 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-/// Simple Java crypto library
-///
-/// @version 0.2.0
-package io.github.borschtoverflow.coffeecrypt;
+package io.github.borschtoverflow.coffeecrypt.hashing;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import lombok.NonNull;
+
+/// @since v0.2.0
+public interface HashFunction
+{
+    byte[] hashData(@NonNull byte[] data);
+    byte[] hashFile(@NonNull Path file) throws IOException;
+
+    /// Returns the internal block size in bytes
+    int getBlockSizeInBytes();
+}

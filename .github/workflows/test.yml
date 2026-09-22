@@ -1,6 +1,8 @@
 name: GitHub CI
 
 on:
+  push:
+    branches: ["master"] # Build the cache once the PR has been merged
   pull_request:
     branches: ["master"]
 

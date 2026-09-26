@@ -47,7 +47,7 @@ public final class HMAC implements MAC
         if (key.length > blockSizeInBytes)
         {
             final byte[] hashedKey = hashFunction.hashData(key);
-            System.arraycopy(hashFunction, 0, result, 0, Math.min(hashedKey.length, blockSizeInBytes));
+            System.arraycopy(hashedKey, 0, result, 0, Math.min(hashedKey.length, blockSizeInBytes));
         }
 
         else

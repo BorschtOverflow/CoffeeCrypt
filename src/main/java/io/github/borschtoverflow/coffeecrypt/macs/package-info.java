@@ -14,7 +14,5 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-/// Simple Java crypto library
-///
-/// @version 0.3.0
-package io.github.borschtoverflow.coffeecrypt;
+/// Contains message authentication code algorithms
+package io.github.borschtoverflow.coffeecrypt.macs;

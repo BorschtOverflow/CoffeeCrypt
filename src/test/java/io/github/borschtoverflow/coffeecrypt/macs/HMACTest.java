@@ -14,7 +14,33 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-/// Simple Java crypto library
-///
-/// @version 0.3.0
-package io.github.borschtoverflow.coffeecrypt;
+package io.github.borschtoverflow.coffeecrypt.macs;
+
+import io.github.borschtoverflow.coffeecrypt.hashing.SHA2_256;
+
+public final class HMACTest extends AbstractMACTest
+{
+    @Override
+    MAC getMAC()
+    {
+        return new HMAC(new SHA2_256());
+    }
+
+    @Override
+    String getHelloWorldMac()
+    {
+        return "241c625395c4efe52f91ae80db0d24d24fe530dfdd3cc99e4591d2c3c85a0909";
+    }
+
+    @Override
+    String getLargeInputMac()
+    {
+        return "49ba261778e4fc18337ce9f136205eba413a52d9c31d597c6092daff00b111fc";
+    }
+
+    @Override
+    String getMacForFile()
+    {
+        return "ef67265db289cfda2d5286f8a2a644526bab3d5202f7730dae7e5dc87ac94141";
+    }
+}

@@ -1,6 +1,10 @@
 [![Github CI](https://github.com/BorschtOverflow/CoffeeCrypt/actions/workflows/test.yml/badge.svg)](https://github.com/BorschtOverflow/CoffeeCrypt/actions/workflows/test.yml)
 [![Docs](https://github.com/BorschtOverflow/CoffeeCrypt/actions/workflows/javadoc.yml/badge.svg)](https://github.com/BorschtOverflow/CoffeeCrypt/actions/workflows/javadoc.yml)
 
+## **Motivation**
+I decided to write this library to learn about crypto in details and
+create a simple and easy to use library.
+
 ## **Build**
 
 Clone the repository:

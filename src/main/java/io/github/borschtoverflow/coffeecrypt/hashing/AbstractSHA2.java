@@ -20,14 +20,8 @@ import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-/// Contain common logic for all SHA-2 hash functions
-///
-/// @see https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 abstract sealed class AbstractSHA2 implements HashFunction permits AbstractSHA2Int, AbstractSHA2Long
 {
-    @Override
-    public abstract int getBlockSizeInBytes();
-
     /// Pads a message according to SHA-2 specification: <br>
     ///
     /// * ***`{original message}`***
@@ -37,7 +31,7 @@ abstract sealed class AbstractSHA2 implements HashFunction permits AbstractSHA2I
     ///
     /// The result should be a multiple of 512 bits
     ///
-    /// @param message           A message to pad
+    /// @param message A message to pad
     /// @param totalBitsInStream The total length of the original message/stream in bits
     ///
     /// @return A padded message in big endian order.

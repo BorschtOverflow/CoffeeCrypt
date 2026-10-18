@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.NonNull;
 
+/// FIPS 180-4 implementation of SHA2-384
 /// @since v0.2.0
 public final class SHA2_384 extends AbstractSHA2Long
 {
@@ -27,7 +28,7 @@ public final class SHA2_384 extends AbstractSHA2Long
     ///
     /// These words were obtained by taking the first
     /// sixty-four bits of the fractional parts of the
-    /// squareroots of the ninth through sixteenth prime numbers
+    /// square roots of the ninth through sixteenth prime numbers
     ///
     // spotless:off
     private static final long[] IV =
@@ -67,7 +68,7 @@ public final class SHA2_384 extends AbstractSHA2Long
     /// HashFunction hashFunction = new SHA2_384();
     ///
     /// final byte[] input  = "Hello, World!".getBytes();
-    /// final byte[] output = hashFunction.hashData();
+    /// final byte[] output = hashFunction.hashData(input);
     /// ```
     ///
     /// @param input An array of bytes to hash
@@ -102,7 +103,7 @@ public final class SHA2_384 extends AbstractSHA2Long
     /// @param file Path to the file
     ///
     /// @throws IllegalArgumentException if **`file`** is **`null`**
-    /// @throws IOException              if **`file`** can't be opened || doesn't exist
+    /// @throws IOException if **`file`** can't be opened or doesn't exist
     @Override
     public byte[] hashFile(@NonNull Path file) throws IOException
     {

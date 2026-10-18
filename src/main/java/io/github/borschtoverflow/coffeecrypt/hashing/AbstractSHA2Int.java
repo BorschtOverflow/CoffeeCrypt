@@ -26,6 +26,9 @@ import java.nio.file.Files;
 
 sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA2_256
 {
+    protected abstract int[] getIV();
+    protected abstract int getHashLengthInBytes();
+
     /// Constants for [SHA2_224] and [SHA2_256]
     ///
     /// These words represent the first thirty-two bits of the
@@ -103,13 +106,13 @@ sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA
     /// Processes a single 512-bit block and updates the state (in-place)
     ///
     /// @param block A 512-bit block
-    /// @param H     An internal state
+    /// @param H An internal state
     protected void processBlock(byte[] block, int[] H)
     {
         // Message schedule
         int[] W = new int[64];
 
-        ByteBuffer byteBuffer = ByteBuffer.wrap(block).order(ByteOrder.BIG_ENDIAN);
+        final ByteBuffer byteBuffer = ByteBuffer.wrap(block).order(ByteOrder.BIG_ENDIAN);
 
         for (int t = 0; t <= 15; t++)
         {
@@ -122,7 +125,7 @@ sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA
         }
 
         // Eight working variables, a, b, c, d, e, f, g, and h, with the (i-1)st
-        // hashvalue:
+        // hash value:
         int a = H[0];
         int b = H[1];
         int c = H[2];
@@ -134,8 +137,8 @@ sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA
 
         for (int t = 0; t <= 63; t++)
         {
-            int T1 = h + uppercaseSigma1(e) + Ch(e, f, g) + K[t] + W[t];
-            int T2 = uppercaseSigma0(a) + Maj(a, b, c);
+            final int T1 = h + uppercaseSigma1(e) + Ch(e, f, g) + K[t] + W[t];
+            final int T2 = uppercaseSigma0(a) + Maj(a, b, c);
 
             h = g;
             g = f;
@@ -158,21 +161,17 @@ sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA
         H[7] += h;
     }
 
-    protected static final int BLOCK_SIZE = 64;
-
-    /// @return Initial Hash Values
-    protected abstract int[] getIV();
-    protected abstract int getHashLengthInBytes();
+    private static final int BLOCK_SIZE = 64;
 
     @Override
     public byte[] hashData(byte[] input)
     {
         final long totalBitsInStream = (long) input.length * 8;
 
-        int[] H = getIV().clone();
+        final int[] H = getIV().clone();
 
-        byte[] paddedMessage = padMessage(input, totalBitsInStream);
-        byte[] block         = new byte[BLOCK_SIZE];
+        final byte[] paddedMessage = padMessage(input, totalBitsInStream);
+        final byte[] block         = new byte[BLOCK_SIZE];
 
         for (int offset = 0; offset < paddedMessage.length; offset += BLOCK_SIZE)
         {
@@ -188,12 +187,13 @@ sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA
     {
         final int CHUNK_SIZE = 4096;
 
-        int[] H = getIV().clone();
+        final int[] H = getIV().clone();
 
-        byte[] chunk          = new byte[CHUNK_SIZE];
-        byte[] pendingBlock   = new byte[BLOCK_SIZE];
-        long   totalBytesRead = 0;
-        int    pendingCount   = 0;
+        final byte[] chunk        = new byte[CHUNK_SIZE];
+        final byte[] pendingBlock = new byte[BLOCK_SIZE];
+
+        long totalBytesRead = 0;
+        int  pendingCount   = 0;
 
         try (InputStream in = new BufferedInputStream(Files.newInputStream(file)))
         {
@@ -225,23 +225,9 @@ sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA
 
         final long totalBitsInStream = totalBytesRead * 8;
 
-        // Construct tail padding directly on the stream
-        // 1 byte for 0b10000000 separator + 8 bytes for length field = 9 bytes minimum
-        // metadata
+        final int padLength = (pendingCount < 56) ? (64 - pendingCount) : (128 - pendingCount);
 
-        int padLength;
-
-        if (pendingCount < 56)
-        {
-            padLength = 64 - pendingCount;
-        }
-
-        else
-        {
-            padLength = 128 - pendingCount;
-        }
-
-        byte[] tailWithPadding = new byte[pendingCount + padLength];
+        final byte[] tailWithPadding = new byte[pendingCount + padLength];
 
         // Copy remaining unpadded bytes
         System.arraycopy(pendingBlock, 0, tailWithPadding, 0, pendingCount);
@@ -254,7 +240,7 @@ sealed abstract class AbstractSHA2Int extends AbstractSHA2 permits SHA2_224, SHA
                 totalBitsInStream);
 
         // Process final 1 or 2 padded tail blocks
-        byte[] block = new byte[BLOCK_SIZE];
+        final byte[] block = new byte[BLOCK_SIZE];
 
         for (int offset = 0; offset < tailWithPadding.length; offset += BLOCK_SIZE)
         {

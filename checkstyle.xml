@@ -19,7 +19,6 @@
         <module name="UnusedLocalVariable"/>
         <module name="MissingSwitchDefault"/>
         <module name="UnnecessaryParentheses"/>
-        <module name="AvoidInlineConditionals"/>
         <module name="SealedShouldHavePermitsList"/>
         <module name="MultipleVariableDeclarations"/>
         <module name="AvoidDoubleBraceInitialization"/>

@@ -23,7 +23,23 @@ import lombok.NonNull;
 /// @since v0.2.0
 public interface HashFunction
 {
+    /// Generates a hash from input data
+    ///
+    /// @param data An array of bytes
+    ///
+    /// @return A hash as an array of bytes
+    ///
+    /// @throws IllegalArgumentException If **`data`** is **`null`**
     byte[] hashData(@NonNull byte[] data);
+
+    /// Generates a hash from input file
+    ///
+    /// @param file Path to the file
+    ///
+    /// @return A hash as an array of bytes
+    ///
+    /// @throws IllegalArgumentException If **`file`** is **`null`**
+    /// @throws IOException If **`file`** cannot be opened or doesn't exist
     byte[] hashFile(@NonNull Path file) throws IOException;
 
     /// Returns the internal block size in bytes

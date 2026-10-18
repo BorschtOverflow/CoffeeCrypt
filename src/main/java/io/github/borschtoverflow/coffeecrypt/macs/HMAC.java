@@ -22,27 +22,23 @@ import java.nio.file.Path;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 import io.github.borschtoverflow.coffeecrypt.hashing.HashFunction;
 
-/// Hash based Message authentication Code
+/// Hash based Message Authentication Code
 /// @since v0.3.0
+@RequiredArgsConstructor
 public final class HMAC implements MAC
 {
-    private final HashFunction hashFunction;
+    private final @NonNull HashFunction hashFunction;
 
     private static final byte IPAD = 0x36; // Inner padding
     private static final byte OPAD = 0x5c; // Outer padding
 
-    /// @throws IllegalArgumentException if **`hashFunction`** is **`null`**
-    public HMAC(@NonNull HashFunction hashFunction)
-    {
-        this.hashFunction = hashFunction;
-    }
-
     private byte[] prepareKey(byte[] key, int blockSizeInBytes)
     {
-        byte[] result = new byte[blockSizeInBytes];
+        final byte[] result = new byte[blockSizeInBytes];
 
         if (key.length > blockSizeInBytes)
         {
@@ -60,7 +56,7 @@ public final class HMAC implements MAC
 
     private byte[] xorInputWithPad(byte[] input, byte pad)
     {
-        byte[] result = new byte[input.length];
+        final byte[] result = new byte[input.length];
 
         for (int i = 0; i < result.length; i++)
         {
@@ -70,9 +66,9 @@ public final class HMAC implements MAC
         return result;
     }
 
-    private byte[] concatinate(byte[] firstPart, byte[] secondPart)
+    private byte[] concatenate(byte[] firstPart, byte[] secondPart)
     {
-        byte[] result = new byte[firstPart.length + secondPart.length];
+        final byte[] result = new byte[firstPart.length + secondPart.length];
 
         System.arraycopy(firstPart, 0, result, 0, firstPart.length);
         System.arraycopy(secondPart, 0, result, firstPart.length, secondPart.length);
@@ -116,7 +112,7 @@ public final class HMAC implements MAC
     /// final byte[] mac = sha512Hmac.generate(input, key);
     /// ```
     ///
-    /// @param input An array of bytes to authentificate
+    /// @param input An array of bytes to authenticate
     /// @param key A secret key
     ///
     /// @throws IllegalArgumentException if at least one of the parameters is **`null`**
@@ -132,9 +128,9 @@ public final class HMAC implements MAC
         final byte[] ipadKey = xorInputWithPad(preparedKey, IPAD);
         final byte[] opadKey = xorInputWithPad(preparedKey, OPAD);
 
-        final byte[] innnerInput = concatinate(ipadKey, input);
-        final byte[] innerHash   = hashFunction.hashData(innnerInput);
-        final byte[] outerInput  = concatinate(opadKey, innerHash);
+        final byte[] innerInput = concatenate(ipadKey, input);
+        final byte[] innerHash  = hashFunction.hashData(innerInput);
+        final byte[] outerInput = concatenate(opadKey, innerHash);
 
         return hashFunction.hashData(outerInput);
     }
@@ -164,7 +160,7 @@ public final class HMAC implements MAC
     /// @param key A secret key
     ///
     /// @throws IllegalArgumentException if at least one of the parameters is **`null`**
-    /// @throws IOException              if **`file`** cannot be opened or doesn't exist
+    /// @throws IOException if **`file`** cannot be opened or doesn't exist
     ///
     /// @return A message authentication code
     @Override
@@ -172,13 +168,13 @@ public final class HMAC implements MAC
     {
         final int blockSizeInBytes = hashFunction.getBlockSizeInBytes();
 
-        byte[] preparedKey = prepareKey(key, blockSizeInBytes);
+        final byte[] preparedKey = prepareKey(key, blockSizeInBytes);
 
-        byte[] ipadKey = xorInputWithPad(preparedKey, IPAD);
-        byte[] opadKey = xorInputWithPad(preparedKey, OPAD);
+        final byte[] ipadKey = xorInputWithPad(preparedKey, IPAD);
+        final byte[] opadKey = xorInputWithPad(preparedKey, OPAD);
 
-        byte[] innerHash  = hashFileWithPrefix(ipadKey, file);
-        byte[] outerInput = concatinate(opadKey, innerHash);
+        final byte[] innerHash  = hashFileWithPrefix(ipadKey, file);
+        final byte[] outerInput = concatenate(opadKey, innerHash);
 
         return hashFunction.hashData(outerInput);
     }

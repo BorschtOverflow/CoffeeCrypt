@@ -26,6 +26,9 @@ import java.nio.file.Files;
 
 sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SHA2_512, SHA2_512t224, SHA2_512t256
 {
+    protected abstract long[] getIV();
+    protected abstract int getHashLengthInBytes();
+
     /// Constants for [SHA2_384], [SHA2_512], [SHA2_512t224] and [SHA2_512t256]
     ///
     /// These words represent the first sixty-four bits of the
@@ -115,13 +118,13 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
     /// Processes a single 1024-bit block and updates the state (in-place)
     ///
     /// @param block A 1024-bit (128-byte) block
-    /// @param H     An internal 64-bit state array
+    /// @param H An internal 64-bit state array
     protected void processBlock(byte[] block, long[] H)
     {
         // Message schedule
         long[] W = new long[80];
 
-        ByteBuffer byteBuffer = ByteBuffer.wrap(block).order(ByteOrder.BIG_ENDIAN);
+        final ByteBuffer byteBuffer = ByteBuffer.wrap(block).order(ByteOrder.BIG_ENDIAN);
 
         for (int t = 0; t <= 15; t++)
         {
@@ -134,7 +137,7 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
         }
 
         // Eight working variables, a, b, c, d, e, f, g, and h, with the (i-1)st
-        // hashvalue:
+        // hash value:
         long a = H[0];
         long b = H[1];
         long c = H[2];
@@ -146,8 +149,8 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
 
         for (int t = 0; t <= 79; t++)
         {
-            long T1 = h + uppercaseSigma1(e) + Ch(e, f, g) + K[t] + W[t];
-            long T2 = uppercaseSigma0(a) + Maj(a, b, c);
+            final long T1 = h + uppercaseSigma1(e) + Ch(e, f, g) + K[t] + W[t];
+            final long T2 = uppercaseSigma0(a) + Maj(a, b, c);
 
             h = g;
             g = f;
@@ -172,19 +175,15 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
 
     protected static final int BLOCK_SIZE = 128;
 
-    /// @return Initial Hash Values
-    protected abstract long[] getIV();
-    protected abstract int getHashLengthInBytes();
-
     @Override
     public byte[] hashData(byte[] input)
     {
         final long totalBitsInStream = (long) input.length * 8;
 
-        long[] H = getIV().clone();
+        final long[] H = getIV().clone();
 
-        byte[] paddedMessage = padMessage(input, totalBitsInStream);
-        byte[] block         = new byte[BLOCK_SIZE];
+        final byte[] paddedMessage = padMessage(input, totalBitsInStream);
+        final byte[] block         = new byte[BLOCK_SIZE];
 
         for (int offset = 0; offset < paddedMessage.length; offset += BLOCK_SIZE)
         {
@@ -200,12 +199,13 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
     {
         final int CHUNK_SIZE = 4096;
 
-        long[] H = getIV().clone();
+        final long[] H = getIV().clone();
 
-        byte[] chunk          = new byte[CHUNK_SIZE];
-        byte[] pendingBlock   = new byte[BLOCK_SIZE];
-        long   totalBytesRead = 0;
-        int    pendingCount   = 0;
+        final byte[] chunk        = new byte[CHUNK_SIZE];
+        final byte[] pendingBlock = new byte[BLOCK_SIZE];
+
+        long totalBytesRead = 0;
+        int  pendingCount   = 0;
 
         try (InputStream in = new BufferedInputStream(Files.newInputStream(file)))
         {
@@ -237,21 +237,9 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
 
         final long totalBitsInStream = totalBytesRead * 8;
 
-        // SHA-384 / SHA-512 128-byte block tail calculation
+        final int padLength = (pendingCount < 112) ? (128 - pendingCount) : (256 - pendingCount);
 
-        int padLength;
-
-        if (pendingCount < 112)
-        {
-            padLength = 128 - pendingCount;
-        }
-
-        else
-        {
-            padLength = 256 - pendingCount;
-        }
-
-        byte[] tailWithPadding = new byte[pendingCount + padLength];
+        final byte[] tailWithPadding = new byte[pendingCount + padLength];
 
         System.arraycopy(pendingBlock, 0, tailWithPadding, 0, pendingCount);
 
@@ -264,7 +252,7 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
         ByteBuffer.wrap(tailWithPadding).order(ByteOrder.BIG_ENDIAN).putLong(lengthPosition, 0L) // High 64 bits
                 .putLong(lengthPosition + 8, totalBitsInStream); // Low 64 bits
 
-        byte[] block = new byte[BLOCK_SIZE];
+        final byte[] block = new byte[BLOCK_SIZE];
 
         for (int offset = 0; offset < tailWithPadding.length; offset += BLOCK_SIZE)
         {
@@ -286,14 +274,14 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
         final int outputBytes = getHashLengthInBytes();
         final int wordsToOutput = (int) Math.ceil(outputBytes / 8.0); // Output 64-bit words
 
-        ByteBuffer outputBuffer = ByteBuffer.allocate(wordsToOutput * 8).order(ByteOrder.BIG_ENDIAN);
+        final ByteBuffer outputBuffer = ByteBuffer.allocate(wordsToOutput * 8).order(ByteOrder.BIG_ENDIAN);
 
         for (int i = 0; i < wordsToOutput; i++)
         {
             outputBuffer.putLong(H[i]);
         }
 
-        byte[] fullResult = outputBuffer.array();
+        final byte[] fullResult = outputBuffer.array();
 
         if (fullResult.length == outputBytes)
         {
@@ -301,7 +289,8 @@ sealed abstract class AbstractSHA2Long extends AbstractSHA2 permits SHA2_384, SH
         }
 
         // For truncated outputs like SHA-512/224 (28 bytes), return exact byte length
-        byte[] truncatedResult = new byte[outputBytes];
+        final byte[] truncatedResult = new byte[outputBytes];
+
         System.arraycopy(fullResult, 0, truncatedResult, 0, outputBytes);
 
         return truncatedResult;

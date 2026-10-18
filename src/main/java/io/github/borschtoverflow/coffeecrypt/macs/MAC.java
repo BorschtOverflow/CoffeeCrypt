@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.NonNull;
 
-/// Interface for message authentication codes
+/// Interface for Message Authentication Codes
 ///
 /// @since v0.3.0
 public interface MAC
@@ -68,7 +68,7 @@ public interface MAC
     /// @param mac A message authentication code
     ///
     /// @throws IllegalArgumentException if at least one of the parameters is **`null`**
-    /// @throws IOException              if **`file`** cannot be opened or doesn't exist
+    /// @throws IOException if **`file`** cannot be opened or doesn't exist
     ///
     /// @return A boolean
     boolean isValid(@NonNull Path file, @NonNull byte[] key, @NonNull byte[] mac) throws IOException;

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.NonNull;
 
+/// FIPS 202 implementation of SHA3-512
 /// @since v0.4.0
 public final class SHA3_512 extends AbstractSHA3 implements HashFunction
 {
@@ -82,7 +83,7 @@ public final class SHA3_512 extends AbstractSHA3 implements HashFunction
     /// @param file Path to the file
     ///
     /// @throws IllegalArgumentException if **`file`** is **`null`**
-    /// @throws IOException              if **`file`** can't be opened || doesn't exist
+    /// @throws IOException if **`file`** can't be opened or doesn't exist
     @Override
     public byte[] hashFile(@NonNull Path file) throws IOException
     {

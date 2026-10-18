@@ -20,12 +20,30 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.NonNull;
 
-/// Extendable output function
+/// eXtendable Output Function
 ///
 /// @since v0.4.0
 public interface XOF
 {
+    /// Generates a custom length hash from input data
+    ///
+    /// @param data An array of bytes
+    /// @param hashLengthInBytes An output hash length in bytes
+    ///
+    /// @return A hash as an array of bytes
+    ///
+    /// @throws IllegalArgumentException If **`data`** is **`null`** or if **`hashLengthInBytes`** is 0 or less
     byte[] hashData(@NonNull byte[] data, long hashLengthInBytes);
+
+    /// Generates a custom length hash from input file
+    ///
+    /// @param file Path to the file
+    /// @param hashLengthInBytes An output hash length in bytes
+    ///
+    /// @return A hash as an array of bytes
+    ///
+    /// @throws IllegalArgumentException If **`file`** is **`null`** or if **`hashLengthInBytes`** is 0 or less
+    /// @throws IOException If **`file`** cannot be opened or doesn't exist
     byte[] hashFile(@NonNull Path file, long hashLengthInBytes) throws IOException;
 
     /// Returns the internal block size in bytes

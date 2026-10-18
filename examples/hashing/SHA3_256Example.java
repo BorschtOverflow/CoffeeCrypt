@@ -14,8 +14,6 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-package hashing;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,35 +22,32 @@ import java.util.HexFormat;
 import io.github.borschtoverflow.coffeecrypt.hashing.HashFunction;
 import io.github.borschtoverflow.coffeecrypt.hashing.SHA3_256;
 
-public final class SHA3_256Example
+void main()
 {
-    public static void main(String[] args)
+    final HashFunction hashFunction = new SHA3_256();
+
+    final String input        = "Hello, World!";
+    final byte[] inputAsBytes = input.getBytes();
+
+    final byte[] output = hashFunction.hashData(inputAsBytes);
+
+    final String outputInHex = HexFormat.of().formatHex(output);
+
+    System.out.printf("SHA3-256(\"%s\") = \"%s\"\n", input, outputInHex);
+
+    final Path inputFile = Paths.get("gradle/wrapper/gradle-wrapper.jar");
+
+    try
     {
-        final HashFunction hashFunction = new SHA3_256();
+        final byte[] fileHash = hashFunction.hashFile(inputFile);
 
-        final String input        = "Hello, World!";
-        final byte[] inputAsBytes = input.getBytes();
+        final String fileHashInHex = HexFormat.of().formatHex(fileHash);
 
-        final byte[] output = hashFunction.hashData(inputAsBytes);
+        System.out.printf("SHA3-256(%s) = \"%s\"", inputFile, fileHashInHex);
+    }
 
-        final String outputInHex = HexFormat.of().formatHex(output);
-
-        System.out.printf("SHA3-256(\"%s\") = \"%s\"\n", input, outputInHex);
-
-        final Path inputFile = Paths.get("gradle/wrapper/gradle-wrapper.jar");
-
-        try
-        {
-            final byte[] fileHash = hashFunction.hashFile(inputFile);
-
-            final String fileHashInHex = HexFormat.of().formatHex(fileHash);
-
-            System.out.printf("SHA3-256(%s) = \"%s\"", inputFile, fileHashInHex);
-        }
-
-        catch (IOException exception)
-        {
-            System.err.printf("ERROR: failed to hash %s!\n%s", inputFile, exception.getMessage());
-        }
+    catch (IOException exception)
+    {
+        System.err.printf("ERROR: failed to hash %s!\n%s", inputFile, exception.getMessage());
     }
 }

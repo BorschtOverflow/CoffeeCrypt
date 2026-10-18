@@ -51,27 +51,18 @@ abstract class AbstractHashFunctionTest
     protected abstract String getLargeStringHash(); // output from getLargeString()
     protected abstract String getFileHash(); // images/bitcoin.png
 
-    String getLargeString()
+    private String getLargeString()
     {
-        final StringBuilder largeString = new StringBuilder();
-
         final String loremIpsumParagraph = "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.";
 
-        for (int i = 0; i < 100; i++)
-        {
-            largeString.append(loremIpsumParagraph);
-        }
-
-        return largeString.toString();
+        return loremIpsumParagraph.repeat(100);
     }
 
     @Test
     void testNullInput()
     {
-        final Exception exception = assertThrows(IllegalArgumentException.class, () ->
-        {
-            getHashFunction().hashData(null);
-        });
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> getHashFunction().hashData(null));
 
         final String exceptionMessage = exception.getMessage();
 
@@ -81,10 +72,8 @@ abstract class AbstractHashFunctionTest
     @Test
     void testNullFile()
     {
-        final Exception exception = assertThrows(IllegalArgumentException.class, () ->
-        {
-            getHashFunction().hashFile(null);
-        });
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> getHashFunction().hashFile(null));
 
         final String exceptionMessage = exception.getMessage();
 
@@ -186,46 +175,48 @@ abstract class AbstractHashFunctionTest
         // Compute baseline hash in single-threaded context
         final byte[] expectedHash = getHashFunction().hashData(inputBytes);
 
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch readyLatch = new CountDownLatch(threadCount); // Synchronizes thread startup
-        CountDownLatch startLatch = new CountDownLatch(1); // Starts all threads at the exact same moment
-
-        List<Future<byte[]>> futures = new ArrayList<>();
-
-        for (int i = 0; i < threadCount; i++)
+        try (ExecutorService executor = Executors.newFixedThreadPool(threadCount))
         {
-            futures.add(executor.submit(() ->
+            CountDownLatch readyLatch = new CountDownLatch(threadCount); // Synchronizes thread startup
+            CountDownLatch startLatch = new CountDownLatch(1); // Starts all threads at the exact same moment
+
+            List<Future<byte[]>> futures = new ArrayList<>();
+
+            for (int i = 0; i < threadCount; i++)
             {
-                readyLatch.countDown();
-                startLatch.await(); // Hold until all worker threads are ready
-
-                byte[] lastResult = null;
-
-                for (int j = 0; j < tasksPerThread; j++)
+                futures.add(executor.submit(() ->
                 {
-                    lastResult = getHashFunction().hashData(inputBytes);
-                }
+                    readyLatch.countDown();
+                    startLatch.await(); // Hold until all worker threads are ready
 
-                return lastResult;
-            }));
+                    byte[] lastResult = null;
+
+                    for (int j = 0; j < tasksPerThread; j++)
+                    {
+                        lastResult = getHashFunction().hashData(inputBytes);
+                    }
+
+                    return lastResult;
+                }));
+            }
+
+            // Wait for all threads to align at the starting gate
+            readyLatch.await();
+            // Release all threads simultaneously to maximize contention
+            startLatch.countDown();
+
+            // Validate results across all threads
+            for (Future<byte[]> future : futures)
+            {
+                byte[] threadResult = future.get();
+
+                assertArrayEquals(expectedHash, threadResult,
+                        "Thread produced an incorrect hash under concurrent load. Instance is NOT thread-safe.");
+            }
+
+            executor.shutdown();
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
         }
-
-        // Wait for all threads to align at the starting gate
-        readyLatch.await();
-        // Release all threads simultaneously to maximize contention
-        startLatch.countDown();
-
-        // Validate results across all threads
-        for (Future<byte[]> future : futures)
-        {
-            byte[] threadResult = future.get();
-
-            assertArrayEquals(expectedHash, threadResult,
-                    "Thread produced an incorrect hash under concurrent load. Instance is NOT thread-safe.");
-        }
-
-        executor.shutdown();
-        assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
     }
 
     @Test
@@ -237,48 +228,53 @@ abstract class AbstractHashFunctionTest
         final int threadCount = 20;
         final int iterations  = 500;
 
-        ExecutorService                  executor   = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch                   startLatch = new CountDownLatch(1);
-        ConcurrentLinkedQueue<Throwable> errors     = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Throwable> errors;
 
-        for (int i = 0; i < threadCount; i++)
+        try (ExecutorService executor = Executors.newFixedThreadPool(threadCount))
         {
-            final int threadID = i;
-            executor.submit(() ->
+            CountDownLatch startLatch = new CountDownLatch(1);
+            errors = new ConcurrentLinkedQueue<>();
+
+            for (int i = 0; i < threadCount; i++)
             {
-                try
+                final int threadID = i;
+
+                executor.submit(() ->
                 {
-                    startLatch.await();
-
-                    String input      = "Input text from thread-" + threadID;
-                    byte[] inputBytes = input.getBytes(StandardCharsets.UTF_8);
-
-                    // Compute clean standalone hash for validation target
-                    byte[] standaloneExpected = getHashFunction().hashData(inputBytes);
-
-                    for (int k = 0; k < iterations; k++)
+                    try
                     {
-                        byte[] result = sharedHash.hashData(inputBytes);
+                        startLatch.await();
 
-                        if (!Arrays.equals(standaloneExpected, result))
+                        String input      = "Input text from thread-" + threadID;
+                        byte[] inputBytes = input.getBytes(StandardCharsets.UTF_8);
+
+                        // Compute clean standalone hash for validation target
+                        byte[] standaloneExpected = getHashFunction().hashData(inputBytes);
+
+                        for (int k = 0; k < iterations; k++)
                         {
-                            throw new AssertionError(
-                                    String.format("Race condition detected on Thread %d at iteration %d", threadID, k));
+                            byte[] result = sharedHash.hashData(inputBytes);
+
+                            if (!Arrays.equals(standaloneExpected, result))
+                            {
+                                throw new AssertionError(String
+                                        .format("Race condition detected on Thread %d at iteration %d", threadID, k));
+                            }
                         }
                     }
-                }
 
-                catch (Throwable throwable)
-                {
-                    errors.add(throwable);
-                }
-            });
+                    catch (Throwable throwable)
+                    {
+                        errors.add(throwable);
+                    }
+                });
+            }
+
+            startLatch.countDown(); // Start race
+            executor.shutdown();
+
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
         }
-
-        startLatch.countDown(); // Start race
-        executor.shutdown();
-
-        assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
 
         if (!errors.isEmpty())
         {
@@ -313,9 +309,6 @@ abstract class AbstractHashFunctionTest
     {
         final Path nonExistentFile = Paths.get("dlhksdasdlkahdas");
 
-        assertThrows(IOException.class, () ->
-        {
-            getHashFunction().hashFile(nonExistentFile);
-        });
+        assertThrows(IOException.class, () -> getHashFunction().hashFile(nonExistentFile));
     }
 }

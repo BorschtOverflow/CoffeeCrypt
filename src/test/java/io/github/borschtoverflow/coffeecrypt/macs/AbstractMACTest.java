@@ -39,29 +39,21 @@ abstract class AbstractMACTest
 
     abstract String getHelloWorldMac();
     abstract String getLargeInputMac();
+    abstract String getLargeInputAsKeyMac();
     abstract String getMacForFile();
 
     private String getLargeString()
     {
-        final StringBuilder largeString = new StringBuilder();
-
         final String loremIpsumParagraph = "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.";
 
-        for (int i = 0; i < 100; i++)
-        {
-            largeString.append(loremIpsumParagraph);
-        }
-
-        return largeString.toString();
+        return loremIpsumParagraph.repeat(100);
     }
 
     @Test
     void testNullInput()
     {
-        final Exception exception = assertThrows(IllegalArgumentException.class, () ->
-        {
-            getMAC().generate((byte[]) null, new byte[0]);
-        });
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> getMAC().generate((byte[]) null, new byte[0]));
 
         final String exceptionMessage = exception.getMessage();
 
@@ -71,10 +63,8 @@ abstract class AbstractMACTest
     @Test
     void testNullFile()
     {
-        final Exception exception = assertThrows(IllegalArgumentException.class, () ->
-        {
-            getMAC().generate((Path) null, new byte[0]);
-        });
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> getMAC().generate((Path) null, new byte[0]));
 
         final String exceptionMessage = exception.getMessage();
 
@@ -84,10 +74,8 @@ abstract class AbstractMACTest
     @Test
     void testNullKey()
     {
-        final Exception exception = assertThrows(IllegalArgumentException.class, () ->
-        {
-            getMAC().generate(new byte[0], null);
-        });
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> getMAC().generate(new byte[0], null));
 
         final String exceptionMessage = exception.getMessage();
 
@@ -200,6 +188,23 @@ abstract class AbstractMACTest
     }
 
     @Test
+    void testLargeInputAsKey()
+    {
+        final String largeKey = getLargeString();
+        final String input    = "some-input";
+
+        final byte[] largeKeyAsBytes = largeKey.getBytes();
+        final byte[] inputAsBytes    = input.getBytes();
+
+        final byte[] output = getMAC().generate(inputAsBytes, largeKeyAsBytes);
+
+        final String expectedResult    = getLargeInputAsKeyMac();
+        final String outputAsHexString = HexFormat.of().formatHex(output);
+
+        assertEquals(expectedResult, outputAsHexString);
+    }
+
+    @Test
     void testMacGenerationForFile()
     {
         // Just needed a file that would not be changed
@@ -228,10 +233,7 @@ abstract class AbstractMACTest
     {
         final Path nonExistentFile = Paths.get("dlhksdasdlkahdas");
 
-        assertThrows(IOException.class, () ->
-        {
-            getMAC().generate(nonExistentFile, new byte[0]);
-        });
+        assertThrows(IOException.class, () -> getMAC().generate(nonExistentFile, new byte[0]));
     }
 
     @Test
@@ -279,13 +281,10 @@ abstract class AbstractMACTest
     }
 
     @Test
-    void testVerifyMacWithNonExistingFile() throws IOException
+    void testVerifyMacWithNonExistingFile()
     {
         final Path nonExistingFile = Paths.get("dlasdhjlkasjd/dkajhsdkjahsd");
 
-        assertThrows(IOException.class, () ->
-        {
-            getMAC().isValid(nonExistingFile, new byte[0], new byte[0]);
-        });
+        assertThrows(IOException.class, () -> getMAC().isValid(nonExistingFile, new byte[0], new byte[0]));
     }
 }

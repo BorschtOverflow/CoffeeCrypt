@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.NonNull;
 
+/// FIPS 180-4 implementation of SHA2-224
 /// @since v0.2.0
 public final class SHA2_224 extends AbstractSHA2Int
 {
@@ -62,7 +63,7 @@ public final class SHA2_224 extends AbstractSHA2Int
     /// HashFunction hashFunction = new SHA2_224();
     ///
     /// final byte[] input  = "Hello, World!".getBytes();
-    /// final byte[] output = hashFunction.hashData();
+    /// final byte[] output = hashFunction.hashData(input);
     /// ```
     ///
     /// @param input An array of bytes to hash
@@ -97,7 +98,7 @@ public final class SHA2_224 extends AbstractSHA2Int
     /// @param file Path to the file
     ///
     /// @throws IllegalArgumentException if **`file`** is **`null`**
-    /// @throws IOException              if **`file`** can't be opened || doesn't exist
+    /// @throws IOException if **`file`** can't be opened or doesn't exist
     @Override
     public byte[] hashFile(@NonNull Path file) throws IOException
     {

@@ -14,8 +14,6 @@
  * along with this program; if not, see <http://www.gnu.org/licenses>,
  */
 
-package hashing;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,36 +22,33 @@ import java.util.HexFormat;
 import io.github.borschtoverflow.coffeecrypt.hashing.SHAKE256;
 import io.github.borschtoverflow.coffeecrypt.hashing.XOF;
 
-public final class SHAKE256Example
+void main()
 {
-    public static void main(String[] args)
+    final XOF xof = new SHAKE256();
+
+    final long hashLengthInBytes = 43;
+    final String input           = "Hello, World!";
+    final byte[] inputAsBytes    = input.getBytes();
+
+    final byte[] output = xof.hashData(inputAsBytes, hashLengthInBytes);
+
+    final String outputInHex = HexFormat.of().formatHex(output);
+
+    System.out.printf("SHAKE256(\"%s\", %d) = \"%s\"\n", input, hashLengthInBytes, outputInHex);
+
+    final Path inputFile = Paths.get("gradle/wrapper/gradle-wrapper.jar");
+
+    try
     {
-        final XOF xof = new SHAKE256();
+        final byte[] fileHash = xof.hashFile(inputFile, hashLengthInBytes);
 
-        final long hashLengthInBytes = 43;
-        final String input           = "Hello, World!";
-        final byte[] inputAsBytes    = input.getBytes();
+        final String fileHashInHex = HexFormat.of().formatHex(fileHash);
 
-        final byte[] output = xof.hashData(inputAsBytes, hashLengthInBytes);
+        System.out.printf("SHAKE256(%s, %d) = \"%s\"", inputFile, hashLengthInBytes, fileHashInHex);
+    }
 
-        final String outputInHex = HexFormat.of().formatHex(output);
-
-        System.out.printf("SHAKE256(\"%s\", %d) = \"%s\"\n", input, hashLengthInBytes, outputInHex);
-
-        final Path inputFile = Paths.get("gradle/wrapper/gradle-wrapper.jar");
-
-        try
-        {
-            final byte[] fileHash = xof.hashFile(inputFile, hashLengthInBytes);
-
-            final String fileHashInHex = HexFormat.of().formatHex(fileHash);
-
-            System.out.printf("SHAKE256(%s, %d) = \"%s\"", inputFile, hashLengthInBytes, fileHashInHex);
-        }
-
-        catch (IOException exception)
-        {
-            System.err.printf("ERROR: failed to hash %s!\n%s", inputFile, exception.getMessage());
-        }
+    catch (IOException exception)
+    {
+        System.err.printf("ERROR: failed to hash %s!\n%s", inputFile, exception.getMessage());
     }
 }

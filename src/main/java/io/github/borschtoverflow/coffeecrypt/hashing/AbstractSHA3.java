@@ -62,7 +62,7 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
     };
     // spotless:on
 
-    /// Performs SHA-3 pad10*1
+    /// Performs SHA-3 padding (pad10*1)
     ///
     /// @param message A message to pad
     /// @param isSHAKE Use padding for SHAKE
@@ -73,14 +73,14 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
         final int blockSize = getBlockSizeInBytes();
 
         // Calculate remaining space in the current block
-        int tailLength    = message.length % blockSize;
-        int paddingLength = blockSize - tailLength;
+        final int tailLength    = message.length % blockSize;
+        final int paddingLength = blockSize - tailLength;
 
-        int totalLength = message.length + paddingLength;
+        final int totalLength = message.length + paddingLength;
 
-        byte[] paddedMessage = Arrays.copyOf(message, totalLength);
+        final byte[] paddedMessage = Arrays.copyOf(message, totalLength);
 
-        byte delimiter = (byte) (isSHAKE ? 0b00011111 : 0b00000110);
+        final byte delimiter = (byte) (isSHAKE ? 0b00011111 : 0b00000110);
 
         paddedMessage[message.length] = delimiter;
 
@@ -113,14 +113,13 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
         {
             for (int y = 0; y < 5; y++)
             {
-                int nx = y;
-                int ny = (2 * x + 3 * y) % 5;
+                final int ny = (2 * x + 3 * y) % 5;
 
-                long lane = state[x + 5 * y];
+                final long lane = state[x + 5 * y];
 
-                int r = ROTATION_OFFSETS[x][y];
+                final int r = ROTATION_OFFSETS[x][y];
 
-                B[nx + 5 * ny] = (r == 0) ? lane : Long.rotateLeft(lane, r);
+                B[y + 5 * ny] = (r == 0) ? lane : Long.rotateLeft(lane, r);
             }
         }
     }
@@ -131,7 +130,7 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
         {
             for (int y = 0; y < 5; y++)
             {
-                int t = x + 5 * y;
+                final int t = x + 5 * y;
                 state[t] = B[t] ^ (~B[(x + 1) % 5 + 5 * y] & B[(x + 2) % 5 + 5 * y]);
             }
         }
@@ -144,8 +143,8 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
 
     protected void keccakPermute(long[] state)
     {
-        long[] C = new long[5];
-        long[] B = new long[25];
+        final long[] C = new long[5];
+        final long[] B = new long[25];
 
         for (int round = 0; round < 24; round++)
         {
@@ -189,7 +188,7 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
         final int blockSize   = getBlockSizeInBytes();
         final boolean isShake = isSHAKE();
 
-        byte[] pendingBlock = new byte[blockSize];
+        final byte[] pendingBlock = new byte[blockSize];
 
         int pendingCount = 0;
 
@@ -197,7 +196,7 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
         {
             int bytesRead;
 
-            byte[] chunk = new byte[4096];
+            final byte[] chunk = new byte[4096];
 
             while ((bytesRead = in.read(chunk)) != -1)
             {
@@ -205,7 +204,7 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
 
                 while (offset < bytesRead)
                 {
-                    int toCopy = Math.min(bytesRead - offset, blockSize - pendingCount);
+                    final int toCopy = Math.min(bytesRead - offset, blockSize - pendingCount);
                     System.arraycopy(chunk, offset, pendingBlock, pendingCount, toCopy);
                     pendingCount += toCopy;
                     offset += toCopy;
@@ -220,12 +219,12 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
             }
         }
 
-        byte[] pendingData = Arrays.copyOf(pendingBlock, pendingCount);
-        byte[] paddedTail  = padMessage(pendingData, isShake);
+        final byte[] pendingData = Arrays.copyOf(pendingBlock, pendingCount);
+        final byte[] paddedTail  = padMessage(pendingData, isShake);
 
         for (int offset = 0; offset < paddedTail.length; offset += blockSize)
         {
-            byte[] block = new byte[blockSize];
+            final byte[] block = new byte[blockSize];
             System.arraycopy(paddedTail, offset, block, 0, blockSize);
             absorbMessageBlock(state, block, blockSize);
             keccakPermute(state);
@@ -237,22 +236,22 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
     {
         final int blockSize = getBlockSizeInBytes();
 
-        ByteBuffer outputBuffer = ByteBuffer.allocate((int) hashLengthInBytes).order(ByteOrder.LITTLE_ENDIAN);
+        final ByteBuffer outputBuffer = ByteBuffer.allocate((int) hashLengthInBytes).order(ByteOrder.LITTLE_ENDIAN);
 
-        byte[] stateBytes = new byte[200];
+        final byte[] stateBytes = new byte[200];
 
         long generatedBytes = 0;
 
         while (generatedBytes < hashLengthInBytes)
         {
-            ByteBuffer temp = ByteBuffer.wrap(stateBytes).order(ByteOrder.LITTLE_ENDIAN);
+            final ByteBuffer temp = ByteBuffer.wrap(stateBytes).order(ByteOrder.LITTLE_ENDIAN);
 
             for (int i = 0; i < 25; i++)
             {
                 temp.putLong(state[i]);
             }
 
-            int chunk = (int) Math.min(blockSize, hashLengthInBytes - generatedBytes);
+            final int chunk = (int) Math.min(blockSize, hashLengthInBytes - generatedBytes);
 
             outputBuffer.put(stateBytes, 0, chunk);
             generatedBytes += chunk;
@@ -274,14 +273,14 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
     // ----------------------------- Fixed length -----------------------------
     protected byte[] hashData(byte[] input)
     {
-        long[] state = new long[25];
+        final long[] state = new long[25];
         absorbArray(state, input);
         return squeeze(state);
     }
 
     protected byte[] hashFile(Path file) throws IOException
     {
-        long[] state = new long[25];
+        final long[] state = new long[25];
         absorbFileStream(state, file);
         return squeeze(state);
     }
@@ -289,14 +288,14 @@ abstract sealed class AbstractSHA3 permits SHA3_224, SHA3_256, SHA3_384, SHA3_51
     // ----------------------------- Variable length -----------------------------
     protected byte[] hashData(byte[] input, long hashLengthInBytes)
     {
-        long[] state = new long[25];
+        final long[] state = new long[25];
         absorbArray(state, input);
         return squeeze(state, hashLengthInBytes);
     }
 
     protected byte[] hashFile(Path file, long hashLengthInBytes) throws IOException
     {
-        long[] state = new long[25];
+        final long[] state = new long[25];
         absorbFileStream(state, file);
         return squeeze(state, hashLengthInBytes);
     }

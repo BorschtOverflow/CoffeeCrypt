@@ -1,0 +1,59 @@
+/* Copyright (C) 2026 BorschtOverflow
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, see <http://www.gnu.org/licenses>,
+ */
+
+package hashing;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HexFormat;
+
+import io.github.borschtoverflow.coffeecrypt.hashing.SHAKE128;
+import io.github.borschtoverflow.coffeecrypt.hashing.XOF;
+
+public final class SHAKE128Example
+{
+    public static void main(String[] args)
+    {
+        final XOF xof = new SHAKE128();
+
+        final long hashLengthInBytes = 24;
+        final String input           = "Hello, World!";
+        final byte[] inputAsBytes    = input.getBytes();
+
+        final byte[] output = xof.hashData(inputAsBytes, hashLengthInBytes);
+
+        final String outputInHex = HexFormat.of().formatHex(output);
+
+        System.out.printf("SHAKE128(\"%s\", %d) = \"%s\"\n", input, hashLengthInBytes, outputInHex);
+
+        final Path inputFile = Paths.get("gradle/wrapper/gradle-wrapper.jar");
+
+        try
+        {
+            final byte[] fileHash = xof.hashFile(inputFile, hashLengthInBytes);
+
+            final String fileHashInHex = HexFormat.of().formatHex(fileHash);
+
+            System.out.printf("SHAKE128(%s, %d) = \"%s\"", inputFile, hashLengthInBytes, fileHashInHex);
+        }
+
+        catch (IOException exception)
+        {
+            System.err.printf("ERROR: failed to hash %s!\n%s", inputFile, exception.getMessage());
+        }
+    }
+}

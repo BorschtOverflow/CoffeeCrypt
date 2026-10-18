@@ -249,7 +249,7 @@ spotless
     format('xml')
     {
         target('**/*.xml')
-        targetExclude('**/build/**')
+        targetExclude('**/build/**', '**/.idea/**')
         leadingTabsToSpaces(indentSize)
         trimTrailingWhitespace()
         endWithNewline()

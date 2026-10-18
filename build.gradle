@@ -5,7 +5,7 @@ plugins
     id 'com.diffplug.spotless' version '8.10.0'
 }
 
-version = '0.3.1'
+version = '0.4.0'
 group   = 'io.github.borschtoverflow'
 
 java
@@ -64,6 +64,7 @@ dependencies
     testCompileOnly         "org.projectlombok:lombok:${lombokVersion}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     testImplementation      "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testImplementation      "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
     testRuntimeOnly         "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testRuntimeOnly         "org.junit.platform:junit-platform-launcher"
 }

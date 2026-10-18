@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.NonNull;
 
+/// FIPS 202 implementation of SHAKE128
 /// @since v0.4.0
 public final class SHAKE128 extends AbstractSHA3 implements XOF
 {
@@ -91,7 +92,7 @@ public final class SHAKE128 extends AbstractSHA3 implements XOF
     /// @param hashLengthInBytes The length of an output hash in bytes
     ///
     /// @throws IllegalArgumentException if **`file`** is **`null`** or if **`hashLengthInBytes`** is 0 or less
-    /// @throws IOException              if **`file`** can't be opened || doesn't exist
+    /// @throws IOException if **`file`** can't be opened or doesn't exist
     @Override
     public byte[] hashFile(@NonNull Path file, long hashLengthInBytes) throws IOException
     {

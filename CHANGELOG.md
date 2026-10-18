@@ -1,3 +1,16 @@
+## v0.4.0 - 2026-10-18
+
+* Added SHA3-224
+* Added SHA3-256
+* Added SHA3-384
+* Added SHA3-512
+* Added SHAKE128
+* Added SHAKE256
+
+## v0.3.1 - 2026-09-26
+
+Fixed HMAC
+
 ## v0.3.0 - 2026-09-26
 
 Added HMAC

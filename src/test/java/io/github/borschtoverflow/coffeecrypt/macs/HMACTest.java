@@ -38,21 +38,21 @@ public final class HMACTest extends AbstractMACTest
     }
 
     @Override
-    protected String getLargeInputMac()
+    protected String getLargeStringInputMac()
     {
         return "49ba261778e4fc18337ce9f136205eba413a52d9c31d597c6092daff00b111fc";
     }
 
     @Override
-    protected String getLargeInputAsKeyMac()
+    protected String getLargeStringInputAsMacKey()
     {
         return "3f79da9b45fa18020ce8ab72c21a31a3c192fb0422ae6b7d610236129ade80f7";
     }
 
     @Override
-    protected String getMacForFile()
+    protected String getMacForLargeTextFile()
     {
-        return "ef67265db289cfda2d5286f8a2a644526bab3d5202f7730dae7e5dc87ac94141";
+        return "66bca3188e7753d4d500ff8046813846cd082948695612ba73d36f2965bdf039";
     }
 
     @Test

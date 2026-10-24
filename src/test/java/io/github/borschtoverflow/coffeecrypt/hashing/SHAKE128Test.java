@@ -43,8 +43,8 @@ public final class SHAKE128Test extends AbstractXOFTest
     }
 
     @Override
-    protected String getExtendableFileHash()
+    protected String getExtendableLargeTextFileHash()
     {
-        return "247142be6243f974fd83bf9a9bf8118619ba3588b5289829db56e12f07e257d0bbec9840d30d70df9d5f1dd7a9d8d3085e653971db468861030ae90afe0fde37";
+        return "bbd43e65c5fa2546d71650f14e1ca87fcb435bac654293be3d41dfb694a64b33d219577555125c7d9df7311ce93464dd37816ef1ce3e6b257a82b50ddf55e71f";
     }
 }

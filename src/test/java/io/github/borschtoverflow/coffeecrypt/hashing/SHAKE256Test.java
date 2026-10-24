@@ -43,8 +43,8 @@ public final class SHAKE256Test extends AbstractXOFTest
     }
 
     @Override
-    protected String getExtendableFileHash()
+    protected String getExtendableLargeTextFileHash()
     {
-        return "f45a16f75833a0b7404f4065e57e1cd993f589650bd50e44cac2131079e96ff3dc41c01f57b1dc61da15b03c10e050cb9b6164194ec2d728b0df10ff3ca521ba13a9708a17091246a8b3";
+        return "aa7652f342d83f4b01b31a64d542c35cc23a0a1cea8fd6ca10cdba98c97704a74e933c9a7971ed224e96e23defe8f4ee4726522443b7a76ff411bf75dcee603d1ae72c3d4f6dcc0867ad";
     }
 }

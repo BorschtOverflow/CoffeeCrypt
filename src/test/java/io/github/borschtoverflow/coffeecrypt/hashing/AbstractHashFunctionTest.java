@@ -43,20 +43,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-abstract class AbstractHashFunctionTest
+import io.github.borschtoverflow.coffeecrypt.AbstractTest;
+
+abstract class AbstractHashFunctionTest extends AbstractTest
 {
     protected abstract HashFunction getHashFunction();
 
     protected abstract String getHelloWorldHash(); // "Hello, World!"
     protected abstract String getLargeStringHash(); // output from getLargeString()
-    protected abstract String getFileHash(); // images/bitcoin.png
-
-    private String getLargeString()
-    {
-        final String loremIpsumParagraph = "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.";
-
-        return loremIpsumParagraph.repeat(100);
-    }
+    protected abstract String getLargeTextFileHash(); // output from generateLargeTextFile()
 
     @Test
     void testNullInput()
@@ -123,17 +118,17 @@ abstract class AbstractHashFunctionTest
     {
         final byte[] input = "some input".getBytes(StandardCharsets.UTF_8);
 
-        final byte[] ouput0 = getHashFunction().hashData(input);
+        final byte[] output0 = getHashFunction().hashData(input);
 
         final HashFunction hash1 = getHashFunction();
         final HashFunction hash2 = getHashFunction();
 
-        final byte[] ouput1 = hash1.hashData(input);
-        final byte[] ouput2 = hash2.hashData(input);
+        final byte[] output1 = hash1.hashData(input);
+        final byte[] output2 = hash2.hashData(input);
 
-        assertArrayEquals(ouput0, ouput1);
-        assertArrayEquals(ouput1, ouput2);
-        assertArrayEquals(ouput2, ouput0);
+        assertArrayEquals(output0, output1);
+        assertArrayEquals(output1, output2);
+        assertArrayEquals(output2, output0);
     }
 
     @Test
@@ -283,17 +278,16 @@ abstract class AbstractHashFunctionTest
     }
 
     @Test
-    void testFileHashing()
+    void testLargeTextFileHashing() throws IOException
     {
-        // Just needed a file that would not be changed
-        final Path file = Paths.get("images/bitcoin.png");
+        final Path file = generateLargeTextFile();
 
         try
         {
             final byte[] output = getHashFunction().hashFile(file);
 
             final String outputAsHex    = HexFormat.of().formatHex(output);
-            final String expectedOutput = getFileHash();
+            final String expectedOutput = getLargeTextFileHash();
 
             assertEquals(expectedOutput, outputAsHex);
         }

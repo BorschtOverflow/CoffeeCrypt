@@ -37,8 +37,8 @@ public final class SHA2_512t224Test extends AbstractHashFunctionTest
     }
 
     @Override
-    protected String getFileHash()
+    protected String getLargeTextFileHash()
     {
-        return "0aa55c45f718c8661ead2ab3d5b04a7cdeb05e0bea9da9093ae1387f";
+        return "dd0cadf04b85854534c624557acb23ef630abdda9421eb6a6e312719";
     }
 }

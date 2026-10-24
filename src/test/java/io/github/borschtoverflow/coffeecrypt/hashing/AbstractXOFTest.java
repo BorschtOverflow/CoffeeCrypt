@@ -45,19 +45,15 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-abstract class AbstractXOFTest
+import io.github.borschtoverflow.coffeecrypt.AbstractTest;
+
+abstract class AbstractXOFTest extends AbstractTest
 {
     protected abstract XOF getExtendableHashFunction();
     protected abstract long getOutputSizeInBytes();
     protected abstract String getExtendableHelloWorldHash(); // "Hello, World!"
     protected abstract String getExtendableLargeStringHash(); // output from getLargeString()
-    protected abstract String getExtendableFileHash(); // images/bitcoin.png
-
-    private String getLargeString()
-    {
-        final String loremIpsumParagraph = "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.";
-        return loremIpsumParagraph.repeat(100);
-    }
+    protected abstract String getExtendableLargeTextFileHash(); // output from generateLargeTextFile()
 
     @Test
     void testNullInput()
@@ -309,24 +305,23 @@ abstract class AbstractXOFTest
     }
 
     @Test
-    void testFileHashing()
+    void testLargeTextFileHashing() throws IOException
     {
-        // Just needed a file that would not be changed
-        final Path file = Paths.get("images/bitcoin.png");
+        final Path largeTextFile = generateLargeTextFile();
 
         try
         {
-            final byte[] output = getExtendableHashFunction().hashFile(file, getOutputSizeInBytes());
+            final byte[] output = getExtendableHashFunction().hashFile(largeTextFile, getOutputSizeInBytes());
 
             final String outputAsHex    = HexFormat.of().formatHex(output);
-            final String expectedOutput = getExtendableFileHash();
+            final String expectedOutput = getExtendableLargeTextFileHash();
 
             assertEquals(expectedOutput, outputAsHex);
         }
 
         catch (IOException _)
         {
-            fail(String.format("ERROR: couldn't open %s file", file));
+            fail(String.format("ERROR: couldn't open %s file", largeTextFile));
         }
     }
 

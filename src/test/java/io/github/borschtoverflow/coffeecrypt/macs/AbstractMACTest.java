@@ -28,26 +28,22 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
 
-abstract class AbstractMACTest
+import io.github.borschtoverflow.coffeecrypt.AbstractTest;
+
+abstract class AbstractMACTest extends AbstractTest
 {
     abstract MAC getMAC();
 
     abstract String getHelloWorldMac();
-    abstract String getLargeInputMac();
-    abstract String getLargeInputAsKeyMac();
-    abstract String getMacForFile();
-
-    private String getLargeString()
-    {
-        final String loremIpsumParagraph = "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.";
-
-        return loremIpsumParagraph.repeat(100);
-    }
+    abstract String getLargeStringInputMac();
+    abstract String getLargeStringInputAsMacKey();
+    abstract String getMacForLargeTextFile();
 
     @Test
     void testNullInput()
@@ -171,7 +167,7 @@ abstract class AbstractMACTest
     }
 
     @Test
-    void testLargeInput()
+    void testLargeStringInput()
     {
         final String largeInput = getLargeString();
         final String key        = "some-key";
@@ -181,14 +177,14 @@ abstract class AbstractMACTest
 
         final byte[] output = getMAC().generate(inputAsBytes, keyAsBytes);
 
-        final String expectedResult    = getLargeInputMac();
+        final String expectedResult    = getLargeStringInputMac();
         final String outputAsHexString = HexFormat.of().formatHex(output);
 
         assertEquals(expectedResult, outputAsHexString);
     }
 
     @Test
-    void testLargeInputAsKey()
+    void testLargeStringInputAsKey()
     {
         final String largeKey = getLargeString();
         final String input    = "some-input";
@@ -198,17 +194,16 @@ abstract class AbstractMACTest
 
         final byte[] output = getMAC().generate(inputAsBytes, largeKeyAsBytes);
 
-        final String expectedResult    = getLargeInputAsKeyMac();
+        final String expectedResult    = getLargeStringInputAsMacKey();
         final String outputAsHexString = HexFormat.of().formatHex(output);
 
         assertEquals(expectedResult, outputAsHexString);
     }
 
     @Test
-    void testMacGenerationForFile()
+    void testMacGenerationForLargeTextFile() throws IOException
     {
-        // Just needed a file that would not be changed
-        final Path file = Paths.get("images/bitcoin.png");
+        final Path file = generateLargeTextFile();
 
         final byte[] key = "some-key".getBytes();
 
@@ -217,7 +212,7 @@ abstract class AbstractMACTest
             final byte[] output = getMAC().generate(file, key);
 
             final String outputAsHex    = HexFormat.of().formatHex(output);
-            final String expectedOutput = getMacForFile();
+            final String expectedOutput = getMacForLargeTextFile();
 
             assertEquals(expectedOutput, outputAsHex);
         }
@@ -226,6 +221,17 @@ abstract class AbstractMACTest
         {
             fail(String.format("ERROR: couldn't open %s file", file));
         }
+    }
+
+    @Test
+    void testMacVerificationForLargeTextFile() throws IOException
+    {
+        final byte[] validMac = HexFormat.of().parseHex(getMacForLargeTextFile());
+
+        final Path inputFile = generateLargeTextFile();
+        final byte[] key     = "some-key".getBytes();
+
+        assertTrue(getMAC().isValid(inputFile, key, validMac));
     }
 
     @Test
@@ -248,17 +254,6 @@ abstract class AbstractMACTest
     }
 
     @Test
-    void testMacVerificationForFile() throws IOException
-    {
-        final byte[] validMac = HexFormat.of().parseHex(getMacForFile());
-
-        final Path inputFile = Paths.get("images/bitcoin.png");
-        final byte[] key     = "some-key".getBytes();
-
-        assertTrue(getMAC().isValid(inputFile, key, validMac));
-    }
-
-    @Test
     void testInvalidMacAsInput()
     {
         final byte[] invalidMac = {0};
@@ -272,12 +267,12 @@ abstract class AbstractMACTest
     @Test
     void testInvalidMacAsInput2() throws IOException
     {
-        final byte[] validMac = {0};
+        final byte[] invalidMac = {0};
 
-        final Path inputFile = Paths.get("images/bitcoin.png");
+        final Path inputFile = Files.createTempFile("dummy-file", ".txt");
         final byte[] key     = "some-key".getBytes();
 
-        assertFalse(getMAC().isValid(inputFile, key, validMac));
+        assertFalse(getMAC().isValid(inputFile, key, invalidMac));
     }
 
     @Test

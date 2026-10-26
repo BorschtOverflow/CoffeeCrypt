@@ -280,7 +280,7 @@ abstract class AbstractHashFunctionTest extends AbstractTest
     @Test
     void testLargeTextFileHashing() throws IOException
     {
-        final Path file = generateLargeTextFile();
+        final Path file = getLargeTextFilePath();
 
         try
         {

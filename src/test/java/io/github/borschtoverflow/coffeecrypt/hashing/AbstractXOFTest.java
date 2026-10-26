@@ -307,7 +307,7 @@ abstract class AbstractXOFTest extends AbstractTest
     @Test
     void testLargeTextFileHashing() throws IOException
     {
-        final Path largeTextFile = generateLargeTextFile();
+        final Path largeTextFile = getLargeTextFilePath();
 
         try
         {

@@ -203,7 +203,7 @@ abstract class AbstractMACTest extends AbstractTest
     @Test
     void testMacGenerationForLargeTextFile() throws IOException
     {
-        final Path file = generateLargeTextFile();
+        final Path file = getLargeTextFilePath();
 
         final byte[] key = "some-key".getBytes();
 
@@ -228,7 +228,7 @@ abstract class AbstractMACTest extends AbstractTest
     {
         final byte[] validMac = HexFormat.of().parseHex(getMacForLargeTextFile());
 
-        final Path inputFile = generateLargeTextFile();
+        final Path inputFile = getLargeTextFilePath();
         final byte[] key     = "some-key".getBytes();
 
         assertTrue(getMAC().isValid(inputFile, key, validMac));

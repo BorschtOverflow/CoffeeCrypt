@@ -29,7 +29,7 @@ public class LoadLargeTextFileTest extends AbstractTest
     @Test
     void testLoadLargeTextFileAsAnArrayOfBytes() throws IOException
     {
-        final Path largeTextFile = generateLargeTextFile();
+        final Path largeTextFile = getLargeTextFilePath();
 
         final OutOfMemoryError exception = assertThrows(OutOfMemoryError.class,
                 () -> Files.readAllBytes(largeTextFile));

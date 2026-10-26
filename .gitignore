@@ -19,3 +19,6 @@ tmp/
 
 # Javadoc
 docs/
+
+# Large files for tests
+test-data/

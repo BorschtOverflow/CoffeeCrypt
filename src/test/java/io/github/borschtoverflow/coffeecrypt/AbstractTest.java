@@ -18,49 +18,17 @@ package io.github.borschtoverflow.coffeecrypt;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Files;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.io.TempDir;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractTest
 {
-    @TempDir
-    Path tempDirectory;
-
-    private Path largeTextFile;
-
-    private final static String loremIpsumParagraph = "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.";
-
     protected String getLargeString()
     {
+        final String loremIpsumParagraph = "Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.";
         return loremIpsumParagraph.repeat(100);
     }
 
-    protected Path generateLargeTextFile() throws IOException
+    protected Path getLargeTextFilePath() throws IOException
     {
-        if (largeTextFile != null && Files.exists(largeTextFile))
-        {
-            return largeTextFile;
-        }
-
-        largeTextFile = tempDirectory.resolve("large-input-file.txt");
-
-        final int size = Integer.MAX_VALUE;
-
-        try (var writer = Files.newBufferedWriter(largeTextFile))
-        {
-            long written = 0;
-
-            while (written < size)
-            {
-                int remaining = (int) Math.min(loremIpsumParagraph.length(), size - written);
-
-                writer.write(loremIpsumParagraph, 0, remaining);
-                written += remaining;
-            }
-        }
-
-        return largeTextFile;
+        return Path.of("test-data/large-text-file.txt");
     }
 }
